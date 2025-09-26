@@ -62,6 +62,7 @@ export const RealtimeCharts = ({ data }: RealtimeChartsProps) => {
                   domain={['dataMin - 0.1', 'dataMax + 0.1']}
                   stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
+                  tickFormatter={(value) => value.toFixed(2)}
                 />
                 <Tooltip 
                   content={<CustomTooltip />}
