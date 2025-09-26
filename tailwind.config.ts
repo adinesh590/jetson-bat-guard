@@ -47,6 +47,24 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        status: {
+          critical: "hsl(var(--status-critical))",
+          warning: "hsl(var(--status-warning))",
+          good: "hsl(var(--status-good))",
+          excellent: "hsl(var(--status-excellent))",
+        },
+        chart: {
+          voltage: "hsl(var(--chart-voltage))",
+          current: "hsl(var(--chart-current))",
+          power: "hsl(var(--chart-power))",
+          temperature: "hsl(var(--chart-temperature))",
+        },
+        state: {
+          charging: "hsl(var(--state-charging))",
+          discharging: "hsl(var(--state-discharging))",
+          idle: "hsl(var(--state-idle))",
+          protection: "hsl(var(--state-protection))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
