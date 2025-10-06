@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +7,11 @@ import { RealtimeCharts } from "@/components/dashboard/RealtimeCharts";
 import { ControlPanel } from "@/components/dashboard/ControlPanel";
 import { SystemInfo } from "@/components/dashboard/SystemInfo";
 import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
+import { TimeRangeSelector, TimeRange } from "@/components/dashboard/TimeRangeSelector";
+import { StatisticsPanel } from "@/components/dashboard/StatisticsPanel";
 import { useBatteryData } from "@/hooks/useBatteryData";
+import { useHistoricalData } from "@/hooks/useHistoricalData";
+import { DateRange } from "react-day-picker";
 import { 
   Activity, 
   Settings, 
@@ -21,6 +26,7 @@ export const Dashboard = () => {
   const {
     batteryData,
     chartData,
+    historicalData,
     controlState,
     mosfetStatus,
     alerts,
@@ -31,6 +37,15 @@ export const Dashboard = () => {
     handleAcknowledgeAlert,
     handleDismissAlert
   } = useBatteryData();
+
+  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('1h');
+  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
+
+  const { filteredData, statistics } = useHistoricalData(
+    historicalData,
+    selectedTimeRange,
+    customDateRange
+  );
 
   const activeAlertsCount = alerts.filter(alert => !alert.acknowledged).length;
 
@@ -106,8 +121,23 @@ export const Dashboard = () => {
             {/* Battery Metrics */}
             <BatteryMetrics data={batteryData} />
             
+            {/* Time Range Selector */}
+            <Card>
+              <CardContent className="pt-6">
+                <TimeRangeSelector
+                  selectedRange={selectedTimeRange}
+                  onRangeChange={setSelectedTimeRange}
+                  customDateRange={customDateRange}
+                  onCustomDateChange={setCustomDateRange}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Statistics */}
+            <StatisticsPanel statistics={statistics} />
+            
             {/* Real-time Charts */}
-            <RealtimeCharts data={chartData} />
+            <RealtimeCharts data={filteredData.length > 0 ? filteredData : chartData} />
             
             {/* Quick Status */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

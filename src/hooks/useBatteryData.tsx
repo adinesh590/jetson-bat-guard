@@ -68,6 +68,7 @@ export const useBatteryData = () => {
   });
 
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [historicalData, setHistoricalData] = useState<ChartDataPoint[]>([]);
   
   const [controlState, setControlState] = useState<ControlState>({
     chargeEnabled: true,
@@ -164,17 +165,24 @@ export const useBatteryData = () => {
         });
 
         // Update chart data
+        const now = new Date().toISOString();
+        const newPoint = {
+          time: now,
+          voltage: batteryData.voltage,
+          current: batteryData.current,
+          power: batteryData.power
+        };
+        
         setChartData(prev => {
-          const now = new Date().toISOString();
-          const newPoint = {
-            time: now,
-            voltage: batteryData.voltage,
-            current: batteryData.current,
-            power: batteryData.power
-          };
-          
-          const newData = [...prev, newPoint].slice(-50); // Keep last 50 points
+          const newData = [...prev, newPoint].slice(-50); // Keep last 50 points for display
           return newData;
+        });
+        
+        // Store in historical data (keep 30 days of data)
+        setHistoricalData(prev => {
+          const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+          const filtered = prev.filter(point => point.time > thirtyDaysAgo);
+          return [...filtered, newPoint];
         });
 
         // Update MOSFET status based on control state
@@ -249,6 +257,7 @@ export const useBatteryData = () => {
   return {
     batteryData,
     chartData,
+    historicalData,
     controlState,
     mosfetStatus,
     alerts,
