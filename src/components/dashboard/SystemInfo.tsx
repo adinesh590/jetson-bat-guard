@@ -9,7 +9,9 @@ import {
   Wifi,
   CheckCircle,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  Activity,
+  Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +34,10 @@ interface SystemStatus {
     capacity: number;
     cycleCount: number;
     health: number;
+    remainingCapacity: number;
+    internalResistance: number;
+    ageMonths: number;
+    degradation: number;
   };
 }
 
@@ -226,6 +232,71 @@ export const SystemInfo = ({ status }: SystemInfoProps) => {
                   {status.battery.health}%
                 </Badge>
               </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Battery Health Details */}
+      <Card className="lg:col-span-3">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Battery Health Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="space-y-2">
+              <span className="text-sm text-muted-foreground">Remaining Capacity</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold">{status.battery.remainingCapacity}</span>
+                <span className="text-sm text-muted-foreground">mAh</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                of {status.battery.capacity}mAh original
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-sm text-muted-foreground">Internal Resistance</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold">{status.battery.internalResistance}</span>
+                <span className="text-sm text-muted-foreground">mΩ</span>
+              </div>
+              <Badge variant={
+                status.battery.internalResistance < 100 ? "default" : 
+                status.battery.internalResistance < 150 ? "secondary" : "destructive"
+              }>
+                {status.battery.internalResistance < 100 ? "Good" : 
+                 status.battery.internalResistance < 150 ? "Fair" : "Poor"}
+              </Badge>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-sm text-muted-foreground">Battery Age</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold">{status.battery.ageMonths}</span>
+                <span className="text-sm text-muted-foreground">months</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {status.battery.cycleCount} cycles completed
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-sm text-muted-foreground">Degradation</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold">{status.battery.degradation}</span>
+                <span className="text-sm text-muted-foreground">%</span>
+              </div>
+              <Badge variant={
+                status.battery.degradation < 10 ? "default" : 
+                status.battery.degradation < 20 ? "secondary" : "destructive"
+              }>
+                {status.battery.degradation < 10 ? "Excellent" : 
+                 status.battery.degradation < 20 ? "Good" : "Replace Soon"}
+              </Badge>
             </div>
           </div>
         </CardContent>

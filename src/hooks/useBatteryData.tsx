@@ -55,7 +55,35 @@ interface SystemStatus {
     capacity: number;
     cycleCount: number;
     health: number;
+    remainingCapacity: number;
+    internalResistance: number;
+    ageMonths: number;
+    degradation: number;
   };
+}
+
+interface DiagnosticsState {
+  mosfetTest: {
+    q1Status: 'idle' | 'testing' | 'passed' | 'failed';
+    q2Status: 'idle' | 'testing' | 'passed' | 'failed';
+    lastTest: string;
+  };
+  sensorValidation: {
+    status: 'idle' | 'running' | 'passed' | 'failed';
+    lastValidation: string;
+    errors: string[];
+  };
+  communicationTest: {
+    status: 'idle' | 'running' | 'passed' | 'failed';
+    latency: number;
+    lastTest: string;
+  };
+  systemLogs: {
+    timestamp: string;
+    level: 'info' | 'warning' | 'error';
+    message: string;
+  }[];
+  debugMode: boolean;
 }
 
 export const useBatteryData = () => {
@@ -111,8 +139,43 @@ export const useBatteryData = () => {
       nominalVoltage: 3.7,
       capacity: 2500,
       cycleCount: 145,
-      health: 92
+      health: 92,
+      remainingCapacity: 2300,
+      internalResistance: 85,
+      ageMonths: 14,
+      degradation: 8
     }
+  });
+
+  const [diagnostics, setDiagnostics] = useState<DiagnosticsState>({
+    mosfetTest: {
+      q1Status: 'idle',
+      q2Status: 'idle',
+      lastTest: 'Never'
+    },
+    sensorValidation: {
+      status: 'idle',
+      lastValidation: 'Never',
+      errors: []
+    },
+    communicationTest: {
+      status: 'idle',
+      latency: 0,
+      lastTest: 'Never'
+    },
+    systemLogs: [
+      {
+        timestamp: new Date().toISOString(),
+        level: 'info',
+        message: 'System initialized successfully'
+      },
+      {
+        timestamp: new Date(Date.now() - 60000).toISOString(),
+        level: 'info',
+        message: 'Battery monitoring started'
+      }
+    ],
+    debugMode: false
   });
 
   // Simulate real-time data updates
@@ -254,6 +317,126 @@ export const useBatteryData = () => {
     setAlerts(prev => prev.filter(alert => alert.id !== alertId));
   }, []);
 
+  const handleRunMosfetTest = useCallback(() => {
+    setDiagnostics(prev => ({
+      ...prev,
+      mosfetTest: {
+        q1Status: 'testing',
+        q2Status: 'testing',
+        lastTest: new Date().toLocaleString()
+      }
+    }));
+
+    setTimeout(() => {
+      setDiagnostics(prev => ({
+        ...prev,
+        mosfetTest: {
+          q1Status: 'passed',
+          q2Status: 'passed',
+          lastTest: new Date().toLocaleString()
+        },
+        systemLogs: [
+          ...prev.systemLogs,
+          {
+            timestamp: new Date().toISOString(),
+            level: 'info',
+            message: 'MOSFET test completed successfully'
+          }
+        ]
+      }));
+    }, 2000);
+  }, []);
+
+  const handleValidateSensors = useCallback(() => {
+    setDiagnostics(prev => ({
+      ...prev,
+      sensorValidation: {
+        status: 'running',
+        lastValidation: new Date().toLocaleString(),
+        errors: []
+      }
+    }));
+
+    setTimeout(() => {
+      setDiagnostics(prev => ({
+        ...prev,
+        sensorValidation: {
+          status: 'passed',
+          lastValidation: new Date().toLocaleString(),
+          errors: []
+        },
+        systemLogs: [
+          ...prev.systemLogs,
+          {
+            timestamp: new Date().toISOString(),
+            level: 'info',
+            message: 'Sensor validation completed - all sensors operational'
+          }
+        ]
+      }));
+    }, 1500);
+  }, []);
+
+  const handleCommunicationTest = useCallback(() => {
+    setDiagnostics(prev => ({
+      ...prev,
+      communicationTest: {
+        status: 'running',
+        latency: 0,
+        lastTest: new Date().toLocaleString()
+      }
+    }));
+
+    setTimeout(() => {
+      const latency = Math.floor(Math.random() * 50) + 10;
+      setDiagnostics(prev => ({
+        ...prev,
+        communicationTest: {
+          status: 'passed',
+          latency,
+          lastTest: new Date().toLocaleString()
+        },
+        systemLogs: [
+          ...prev.systemLogs,
+          {
+            timestamp: new Date().toISOString(),
+            level: 'info',
+            message: `Communication test passed - latency: ${latency}ms`
+          }
+        ]
+      }));
+    }, 1000);
+  }, []);
+
+  const handleToggleDebugMode = useCallback(() => {
+    setDiagnostics(prev => {
+      const newDebugMode = !prev.debugMode;
+      return {
+        ...prev,
+        debugMode: newDebugMode,
+        systemLogs: [
+          ...prev.systemLogs,
+          {
+            timestamp: new Date().toISOString(),
+            level: 'info',
+            message: `Debug mode ${newDebugMode ? 'enabled' : 'disabled'}`
+          }
+        ]
+      };
+    });
+  }, []);
+
+  const handleClearLogs = useCallback(() => {
+    setDiagnostics(prev => ({
+      ...prev,
+      systemLogs: [{
+        timestamp: new Date().toISOString(),
+        level: 'info',
+        message: 'System logs cleared'
+      }]
+    }));
+  }, []);
+
   return {
     batteryData,
     chartData,
@@ -262,10 +445,16 @@ export const useBatteryData = () => {
     mosfetStatus,
     alerts,
     systemStatus,
+    diagnostics,
     handleControlChange,
     handleEmergencyStop,
     handleResetProtection,
     handleAcknowledgeAlert,
-    handleDismissAlert
+    handleDismissAlert,
+    handleRunMosfetTest,
+    handleValidateSensors,
+    handleCommunicationTest,
+    handleToggleDebugMode,
+    handleClearLogs
   };
 };

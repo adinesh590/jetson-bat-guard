@@ -9,6 +9,7 @@ import { SystemInfo } from "@/components/dashboard/SystemInfo";
 import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
 import { TimeRangeSelector, TimeRange } from "@/components/dashboard/TimeRangeSelector";
 import { StatisticsPanel } from "@/components/dashboard/StatisticsPanel";
+import { DiagnosticsPanel } from "@/components/dashboard/DiagnosticsPanel";
 import { useBatteryData } from "@/hooks/useBatteryData";
 import { useHistoricalData } from "@/hooks/useHistoricalData";
 import { DateRange } from "react-day-picker";
@@ -31,11 +32,17 @@ export const Dashboard = () => {
     mosfetStatus,
     alerts,
     systemStatus,
+    diagnostics,
     handleControlChange,
     handleEmergencyStop,
     handleResetProtection,
     handleAcknowledgeAlert,
-    handleDismissAlert
+    handleDismissAlert,
+    handleRunMosfetTest,
+    handleValidateSensors,
+    handleCommunicationTest,
+    handleToggleDebugMode,
+    handleClearLogs
   } = useBatteryData();
 
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('1h');
@@ -210,6 +217,22 @@ export const Dashboard = () => {
 
           <TabsContent value="system" className="space-y-6">
             <SystemInfo status={systemStatus} />
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>System Diagnostics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DiagnosticsPanel
+                  diagnostics={diagnostics}
+                  onRunMosfetTest={handleRunMosfetTest}
+                  onValidateSensors={handleValidateSensors}
+                  onCommunicationTest={handleCommunicationTest}
+                  onToggleDebugMode={handleToggleDebugMode}
+                  onClearLogs={handleClearLogs}
+                />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="alerts" className="space-y-6">
