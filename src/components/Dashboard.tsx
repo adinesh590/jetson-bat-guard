@@ -10,8 +10,10 @@ import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
 import { TimeRangeSelector, TimeRange } from "@/components/dashboard/TimeRangeSelector";
 import { StatisticsPanel } from "@/components/dashboard/StatisticsPanel";
 import { DiagnosticsPanel } from "@/components/dashboard/DiagnosticsPanel";
+import { AnalyticsPanel } from "@/components/dashboard/AnalyticsPanel";
 import { useBatteryData } from "@/hooks/useBatteryData";
 import { useHistoricalData } from "@/hooks/useHistoricalData";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import { DateRange } from "react-day-picker";
 import { 
   Activity, 
@@ -53,6 +55,14 @@ export const Dashboard = () => {
     selectedTimeRange,
     customDateRange
   );
+
+  const { 
+    performanceMetrics, 
+    usagePatterns, 
+    cycleAnalysis,
+    generateCSVReport,
+    generateDetailedReport 
+  } = useAnalytics(historicalData, batteryData, systemStatus);
 
   const activeAlertsCount = alerts.filter(alert => !alert.acknowledged).length;
 
@@ -102,10 +112,14 @@ export const Dashboard = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="monitoring" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="monitoring" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
               Monitoring
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              Analytics
             </TabsTrigger>
             <TabsTrigger value="control" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
@@ -203,6 +217,16 @@ export const Dashboard = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <AnalyticsPanel
+              performanceMetrics={performanceMetrics}
+              usagePatterns={usagePatterns}
+              cycleAnalysis={cycleAnalysis}
+              onGenerateCSV={generateCSVReport}
+              onGenerateDetailedReport={generateDetailedReport}
+            />
           </TabsContent>
 
           <TabsContent value="control" className="space-y-6">
