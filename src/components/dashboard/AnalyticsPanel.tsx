@@ -13,7 +13,13 @@ import {
   Activity,
   Zap,
   Clock,
-  Battery
+  Battery,
+  CheckCircle,
+  AlertTriangle,
+  XCircle,
+  Lightbulb,
+  Target,
+  AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -41,10 +47,23 @@ interface CycleAnalysis {
   healthTrend: 'improving' | 'stable' | 'degrading';
 }
 
+interface BatteryStatus {
+  type: string;
+  nominalVoltage: number;
+  capacity: number;
+  cycleCount: number;
+  health: number;
+  remainingCapacity: number;
+  internalResistance: number;
+  ageMonths: number;
+  degradation: number;
+}
+
 interface AnalyticsPanelProps {
   performanceMetrics: PerformanceMetrics;
   usagePatterns: UsagePatterns;
   cycleAnalysis: CycleAnalysis;
+  batteryStatus: BatteryStatus;
   onGenerateCSV: () => void;
   onGenerateDetailedReport: () => void;
 }
@@ -53,6 +72,7 @@ export const AnalyticsPanel = ({
   performanceMetrics,
   usagePatterns,
   cycleAnalysis,
+  batteryStatus,
   onGenerateCSV,
   onGenerateDetailedReport
 }: AnalyticsPanelProps) => {
@@ -78,8 +98,158 @@ export const AnalyticsPanel = ({
     }
   };
 
+  // Generate recommendations based on data
+  const getRecommendations = () => {
+    const recommendations = [];
+    
+    if (batteryStatus.degradation > 15) {
+      recommendations.push({
+        type: 'warning',
+        title: 'High Battery Degradation',
+        message: 'Consider battery replacement soon. Current degradation exceeds 15%.',
+        action: 'Schedule maintenance'
+      });
+    }
+    
+    if (cycleAnalysis.averageDepthOfDischarge > 80) {
+      recommendations.push({
+        type: 'info',
+        title: 'Deep Discharge Optimization',
+        message: 'Reduce average depth of discharge to extend battery life. Try to keep DoD below 80%.',
+        action: 'Adjust usage patterns'
+      });
+    }
+    
+    if (performanceMetrics.chargeEfficiency < 85) {
+      recommendations.push({
+        type: 'warning',
+        title: 'Low Charge Efficiency',
+        message: 'Charging efficiency is below optimal range. Check charging system.',
+        action: 'Run diagnostics'
+      });
+    }
+    
+    if (batteryStatus.internalResistance > 150) {
+      recommendations.push({
+        type: 'critical',
+        title: 'High Internal Resistance',
+        message: 'Battery internal resistance is elevated, indicating significant wear.',
+        action: 'Replace battery'
+      });
+    }
+    
+    if (usagePatterns.averageDailyConsumption > 50) {
+      recommendations.push({
+        type: 'info',
+        title: 'High Energy Consumption',
+        message: 'Daily energy usage is high. Consider load balancing or capacity upgrade.',
+        action: 'Review load profile'
+      });
+    }
+    
+    if (recommendations.length === 0) {
+      recommendations.push({
+        type: 'success',
+        title: 'All Systems Optimal',
+        message: 'Battery is operating within optimal parameters. Continue current maintenance schedule.',
+        action: 'Continue monitoring'
+      });
+    }
+    
+    return recommendations;
+  };
+
+  const recommendations = getRecommendations();
+
+  // Calculate risk score (0-100)
+  const calculateRiskScore = () => {
+    let risk = 0;
+    
+    if (batteryStatus.degradation > 20) risk += 30;
+    else if (batteryStatus.degradation > 10) risk += 15;
+    
+    if (batteryStatus.internalResistance > 150) risk += 25;
+    else if (batteryStatus.internalResistance > 100) risk += 10;
+    
+    if (performanceMetrics.chargeEfficiency < 85) risk += 20;
+    else if (performanceMetrics.chargeEfficiency < 90) risk += 10;
+    
+    if (cycleAnalysis.healthTrend === 'degrading') risk += 15;
+    
+    if (cycleAnalysis.averageDepthOfDischarge > 80) risk += 10;
+    
+    return Math.min(100, risk);
+  };
+
+  const riskScore = calculateRiskScore();
+
   return (
     <div className="space-y-6">
+      {/* Battery Health Details */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Battery Health Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="space-y-2">
+              <span className="text-sm text-muted-foreground">Remaining Capacity</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold">{batteryStatus.remainingCapacity}</span>
+                <span className="text-sm text-muted-foreground">mAh</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                of {batteryStatus.capacity}mAh original
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-sm text-muted-foreground">Internal Resistance</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold">{batteryStatus.internalResistance}</span>
+                <span className="text-sm text-muted-foreground">mΩ</span>
+              </div>
+              <Badge variant={
+                batteryStatus.internalResistance < 100 ? "default" : 
+                batteryStatus.internalResistance < 150 ? "secondary" : "destructive"
+              }>
+                {batteryStatus.internalResistance < 100 ? "Good" : 
+                 batteryStatus.internalResistance < 150 ? "Fair" : "Poor"}
+              </Badge>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-sm text-muted-foreground">Battery Age</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold">{batteryStatus.ageMonths}</span>
+                <span className="text-sm text-muted-foreground">months</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {batteryStatus.cycleCount} cycles completed
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-sm text-muted-foreground">Degradation</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold">{batteryStatus.degradation}</span>
+                <span className="text-sm text-muted-foreground">%</span>
+              </div>
+              <Badge variant={
+                batteryStatus.degradation < 10 ? "default" : 
+                batteryStatus.degradation < 20 ? "secondary" : "destructive"
+              }>
+                {batteryStatus.degradation < 10 ? "Excellent" : 
+                 batteryStatus.degradation < 20 ? "Good" : "Replace Soon"}
+              </Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Performance Metrics */}
       <Card>
         <CardHeader>
@@ -272,6 +442,136 @@ export const AnalyticsPanel = ({
         </Card>
       </div>
 
+      {/* Predictive Analytics & Risk Assessment */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-4 w-4" />
+              Risk Assessment
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Overall Risk Score</span>
+                <Badge variant={
+                  riskScore < 30 ? "default" : 
+                  riskScore < 60 ? "secondary" : "destructive"
+                }>
+                  {riskScore}/100
+                </Badge>
+              </div>
+              <Progress value={riskScore} className="h-3" />
+              <div className="text-xs text-muted-foreground">
+                {riskScore < 30 ? 'Low risk - System operating normally' :
+                 riskScore < 60 ? 'Moderate risk - Monitor closely' :
+                 'High risk - Action required'}
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-3">
+              <div className="text-sm font-medium">Risk Factors</div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span>Battery Degradation</span>
+                  <div className="flex items-center gap-2">
+                    {batteryStatus.degradation > 20 ? 
+                      <AlertCircle className="h-3 w-3 text-status-critical" /> :
+                      batteryStatus.degradation > 10 ?
+                      <AlertTriangle className="h-3 w-3 text-status-warning" /> :
+                      <CheckCircle className="h-3 w-3 text-status-good" />
+                    }
+                    <span className="text-xs text-muted-foreground">{batteryStatus.degradation}%</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span>Internal Resistance</span>
+                  <div className="flex items-center gap-2">
+                    {batteryStatus.internalResistance > 150 ? 
+                      <AlertCircle className="h-3 w-3 text-status-critical" /> :
+                      batteryStatus.internalResistance > 100 ?
+                      <AlertTriangle className="h-3 w-3 text-status-warning" /> :
+                      <CheckCircle className="h-3 w-3 text-status-good" />
+                    }
+                    <span className="text-xs text-muted-foreground">{batteryStatus.internalResistance}mΩ</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span>Charge Efficiency</span>
+                  <div className="flex items-center gap-2">
+                    {performanceMetrics.chargeEfficiency < 85 ? 
+                      <AlertCircle className="h-3 w-3 text-status-critical" /> :
+                      performanceMetrics.chargeEfficiency < 90 ?
+                      <AlertTriangle className="h-3 w-3 text-status-warning" /> :
+                      <CheckCircle className="h-3 w-3 text-status-good" />
+                    }
+                    <span className="text-xs text-muted-foreground">{performanceMetrics.chargeEfficiency.toFixed(1)}%</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span>Health Trend</span>
+                  <div className="flex items-center gap-2">
+                    {cycleAnalysis.healthTrend === 'degrading' ? 
+                      <TrendingDown className="h-3 w-3 text-status-critical" /> :
+                      cycleAnalysis.healthTrend === 'stable' ?
+                      <Minus className="h-3 w-3 text-status-warning" /> :
+                      <TrendingUp className="h-3 w-3 text-status-good" />
+                    }
+                    <span className="text-xs text-muted-foreground capitalize">{cycleAnalysis.healthTrend}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lightbulb className="h-4 w-4" />
+              Recommendations
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {recommendations.map((rec, index) => (
+                <div 
+                  key={index}
+                  className={cn(
+                    "p-3 rounded-lg border",
+                    rec.type === 'success' && "bg-status-good/10 border-status-good/20",
+                    rec.type === 'info' && "bg-primary/10 border-primary/20",
+                    rec.type === 'warning' && "bg-status-warning/10 border-status-warning/20",
+                    rec.type === 'critical' && "bg-status-critical/10 border-status-critical/20"
+                  )}
+                >
+                  <div className="flex items-start gap-2">
+                    {rec.type === 'success' && <CheckCircle className="h-4 w-4 text-status-good mt-0.5" />}
+                    {rec.type === 'info' && <AlertTriangle className="h-4 w-4 text-primary mt-0.5" />}
+                    {rec.type === 'warning' && <AlertTriangle className="h-4 w-4 text-status-warning mt-0.5" />}
+                    {rec.type === 'critical' && <AlertCircle className="h-4 w-4 text-status-critical mt-0.5" />}
+                    <div className="flex-1 space-y-1">
+                      <div className="text-sm font-medium">{rec.title}</div>
+                      <div className="text-xs text-muted-foreground">{rec.message}</div>
+                      <Badge variant="outline" className="text-xs mt-1">
+                        {rec.action}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Report Generation */}
       <Card>
         <CardHeader>
@@ -303,7 +603,7 @@ export const AnalyticsPanel = ({
           
           <div className="mt-4 p-4 rounded-md bg-muted">
             <p className="text-xs text-muted-foreground">
-              Reports include all historical data, performance metrics, usage patterns, and cycle analysis. 
+              Reports include all historical data, performance metrics, usage patterns, cycle analysis, and predictive recommendations. 
               CSV format is suitable for spreadsheet applications, while JSON format provides complete system details.
             </p>
           </div>

@@ -224,6 +224,7 @@ export const Dashboard = () => {
               performanceMetrics={performanceMetrics}
               usagePatterns={usagePatterns}
               cycleAnalysis={cycleAnalysis}
+              batteryStatus={systemStatus.battery}
               onGenerateCSV={generateCSVReport}
               onGenerateDetailedReport={generateDetailedReport}
             />
