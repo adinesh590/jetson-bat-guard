@@ -58,7 +58,7 @@ const Index = () => {
       </div>
 
       {/* Dashboard */}
-      <Dashboard />
+      <Dashboard userRole={userRole} />
     </div>
   );
 };

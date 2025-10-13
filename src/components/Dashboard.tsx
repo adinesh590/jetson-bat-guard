@@ -11,6 +11,9 @@ import { TimeRangeSelector, TimeRange } from "@/components/dashboard/TimeRangeSe
 import { StatisticsPanel } from "@/components/dashboard/StatisticsPanel";
 import { DiagnosticsPanel } from "@/components/dashboard/DiagnosticsPanel";
 import { AnalyticsPanel } from "@/components/dashboard/AnalyticsPanel";
+import { UserManagementPanel } from "@/components/dashboard/UserManagementPanel";
+import { WebhookPanel } from "@/components/dashboard/WebhookPanel";
+import { DataExportPanel } from "@/components/dashboard/DataExportPanel";
 import { useBatteryData } from "@/hooks/useBatteryData";
 import { useHistoricalData } from "@/hooks/useHistoricalData";
 import { useAnalytics } from "@/hooks/useAnalytics";
@@ -21,11 +24,18 @@ import {
   Info, 
   Bell,
   Zap,
-  Shield
+  Shield,
+  Users,
+  Webhook,
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Dashboard = () => {
+interface DashboardProps {
+  userRole?: string;
+}
+
+export const Dashboard = ({ userRole = "viewer" }: DashboardProps) => {
   const {
     batteryData,
     chartData,
@@ -112,7 +122,7 @@ export const Dashboard = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="monitoring" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="monitoring" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
               Monitoring
@@ -127,7 +137,7 @@ export const Dashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="system" className="flex items-center gap-2">
               <Info className="h-4 w-4" />
-              System Info
+              System
             </TabsTrigger>
             <TabsTrigger value="alerts" className="flex items-center gap-2 relative">
               <Bell className="h-4 w-4" />
@@ -136,6 +146,12 @@ export const Dashboard = () => {
                 <div className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full" />
               )}
             </TabsTrigger>
+            {(userRole === "admin" || userRole === "operator") && (
+              <TabsTrigger value="admin" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Admin
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="monitoring" className="space-y-6">
@@ -276,6 +292,17 @@ export const Dashboard = () => {
               onConfigChange={() => {}}
             />
           </TabsContent>
+
+          {(userRole === "admin" || userRole === "operator") && (
+            <TabsContent value="admin" className="space-y-6">
+              {userRole === "admin" && <UserManagementPanel />}
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <WebhookPanel />
+                <DataExportPanel />
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>
