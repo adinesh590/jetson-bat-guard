@@ -1,1 +1,7 @@
 project_id = "wbkqyibvhjstnyzxjlkf"
+
+[functions.ingest-battery-data]
+verify_jwt = false
+
+[functions.get-latest-battery-data]
+verify_jwt = false
