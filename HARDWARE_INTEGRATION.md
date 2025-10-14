@@ -21,15 +21,7 @@ Send a POST request with JSON payload:
   "current": 2.3,
   "power": 28.75,
   "soc": 85,
-  "soh": 98,
-  "temperature": 35,
-  "cell_voltages": [3.7, 3.72, 3.68, 3.71],
-  "charge_status": "charging",
-  "protection_status": "normal",
-  "mosfet_status": {
-    "charge": true,
-    "discharge": true
-  }
+  "temperature": 35
 }
 ```
 
@@ -39,13 +31,8 @@ Send a POST request with JSON payload:
 - `soc` (number): State of Charge percentage (0-100)
 
 ### Optional Fields
-- `power` (number): Power in watts (calculated if not provided)
-- `soh` (number): State of Health percentage (defaults to 100)
-- `temperature` (number): Temperature in Celsius (defaults to 25)
-- `cell_voltages` (array): Individual cell voltages
-- `charge_status` (string): "charging", "discharging", "idle"
-- `protection_status` (string): Current protection mode
-- `mosfet_status` (object): MOSFET switch states
+- `power` (number): Power in watts (calculated from voltage * current if not provided)
+- `temperature` (number): Temperature in Celsius
 
 ## Python Example
 

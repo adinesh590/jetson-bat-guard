@@ -9,17 +9,9 @@ const corsHeaders = {
 interface BatteryDataPayload {
   voltage: number;
   current: number;
-  power: number;
+  power?: number;
   soc: number;
-  soh: number;
-  temperature: number;
-  cell_voltages?: number[];
-  charge_status?: string;
-  protection_status?: string;
-  mosfet_status?: {
-    charge: boolean;
-    discharge: boolean;
-  };
+  temperature?: number;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -51,6 +43,14 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Determine state based on current
+    let state = 'IDLE';
+    if (data.current > 0.1) {
+      state = 'CHARGING';
+    } else if (data.current < -0.1) {
+      state = 'DISCHARGING';
+    }
+
     // Insert battery data into database
     const { error: insertError } = await supabase
       .from("battery_logs")
@@ -59,12 +59,8 @@ const handler = async (req: Request): Promise<Response> => {
         current: data.current,
         power: data.power || data.voltage * data.current,
         soc: data.soc,
-        soh: data.soh || 100,
-        temperature: data.temperature || 25,
-        cell_voltages: data.cell_voltages || null,
-        charge_status: data.charge_status || null,
-        protection_status: data.protection_status || null,
-        mosfet_status: data.mosfet_status || null,
+        temperature: data.temperature || null,
+        state: state,
       });
 
     if (insertError) {
@@ -77,28 +73,25 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (data.soc < 20) {
       alerts.push({
-        type: "battery_critical",
+        title: "Battery Critical",
         severity: data.soc < 10 ? "critical" : "warning",
-        message: `Battery level critical: ${data.soc}%`,
-        value: data.soc,
+        message: `Battery level ${data.soc < 10 ? 'critically' : ''} low: ${data.soc}%`,
       });
     }
 
     if (data.temperature && data.temperature > 45) {
       alerts.push({
-        type: "temperature_high",
+        title: "High Temperature",
         severity: data.temperature > 50 ? "critical" : "warning",
         message: `High temperature detected: ${data.temperature}°C`,
-        value: data.temperature,
       });
     }
 
     if (data.voltage && data.voltage < 10) {
       alerts.push({
-        type: "voltage_low",
+        title: "Low Voltage",
         severity: "warning",
         message: `Low voltage detected: ${data.voltage}V`,
-        value: data.voltage,
       });
     }
 
@@ -117,7 +110,7 @@ const handler = async (req: Request): Promise<Response> => {
         for (const alert of alerts) {
           await supabase.functions.invoke("trigger-webhooks", {
             body: {
-              eventType: alert.type,
+              eventType: alert.title.toLowerCase().replace(' ', '_'),
               data: alert,
               timestamp: new Date().toISOString(),
             },
