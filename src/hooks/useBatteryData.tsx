@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface BatteryData {
   voltage: number;
@@ -87,12 +89,13 @@ interface DiagnosticsState {
 }
 
 export const useBatteryData = () => {
+  const { toast } = useToast();
   const [batteryData, setBatteryData] = useState<BatteryData>({
-    voltage: 3.85,
-    current: 0.5,
-    power: 1.925,
-    soc: 65,
-    state: 'CHARGING'
+    voltage: 0,
+    current: 0,
+    power: 0,
+    soc: 0,
+    state: 'IDLE'
   });
 
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
@@ -111,15 +114,7 @@ export const useBatteryData = () => {
     q2Discharge: false
   });
 
-  const [alerts, setAlerts] = useState<Alert[]>([
-    {
-      id: '1',
-      severity: 'warning',
-      message: 'Battery voltage approaching minimum threshold',
-      timestamp: new Date().toISOString(),
-      acknowledged: false
-    }
-  ]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
 
   const [systemStatus] = useState<SystemStatus>({
     jetsonNano: {
@@ -178,111 +173,176 @@ export const useBatteryData = () => {
     debugMode: false
   });
 
-  // Simulate real-time data updates
+  // Fetch initial data
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (!controlState.emergencyStop) {
-        setBatteryData(prev => {
-          const voltageVariation = (Math.random() - 0.5) * 0.1;
-          const currentVariation = (Math.random() - 0.5) * 0.2;
-          
-          let newVoltage = Math.max(3.0, Math.min(4.2, prev.voltage + voltageVariation));
-          let newCurrent = prev.current + currentVariation;
-          
-          // Simulate charging/discharging behavior
-          if (controlState.chargeEnabled && prev.soc < 100) {
-            newCurrent = Math.max(0, newCurrent);
-          } else if (controlState.dischargeEnabled && prev.soc > 0) {
-            newCurrent = Math.min(0, newCurrent);
-          } else {
-            newCurrent = 0;
-          }
-          
-          const newPower = newVoltage * newCurrent;
-          let newSoc = prev.soc;
-          
-          // Update SoC based on current
-          if (newCurrent > 0.1) {
-            newSoc = Math.min(100, prev.soc + 0.1);
-          } else if (newCurrent < -0.1) {
-            newSoc = Math.max(0, prev.soc - 0.1);
-          }
-          
-          // Determine state
-          let newState: BatteryData['state'] = 'IDLE';
-          if (controlState.protectionMode) {
-            newState = 'PROTECTION';
-          } else if (newCurrent > 0.1) {
-            newState = 'CHARGING';
-          } else if (newCurrent < -0.1) {
-            newState = 'DISCHARGING';
-          }
+    const fetchInitialData = async () => {
+      try {
+        // Fetch latest battery reading
+        const { data: latestReading, error: readingError } = await supabase
+          .from('battery_logs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
 
-          return {
-            voltage: newVoltage,
-            current: newCurrent,
-            power: newPower,
-            soc: Math.round(newSoc),
-            state: newState
-          };
-        });
+        if (readingError && readingError.code !== 'PGRST116') {
+          console.error('Error fetching battery data:', readingError);
+          toast({
+            title: 'Error',
+            description: 'Failed to fetch battery data',
+            variant: 'destructive'
+          });
+        } else if (latestReading) {
+          setBatteryData({
+            voltage: Number(latestReading.voltage),
+            current: Number(latestReading.current),
+            power: Number(latestReading.power),
+            soc: Number(latestReading.soc),
+            state: (latestReading.state || 'IDLE') as BatteryData['state']
+          });
+        }
 
-        // Update chart data
-        const now = new Date().toISOString();
-        const newPoint = {
-          time: now,
-          voltage: batteryData.voltage,
-          current: batteryData.current,
-          power: batteryData.power
-        };
-        
-        setChartData(prev => {
-          const newData = [...prev, newPoint].slice(-50); // Keep last 50 points for display
-          return newData;
-        });
-        
-        // Store in historical data (keep 30 days of data)
-        setHistoricalData(prev => {
-          const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-          const filtered = prev.filter(point => point.time > thirtyDaysAgo);
-          return [...filtered, newPoint];
-        });
+        // Fetch recent readings for chart (last 50)
+        const { data: recentReadings, error: chartError } = await supabase
+          .from('battery_logs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50);
 
-        // Update MOSFET status based on control state
-        setMosfetStatus({
-          q1Charge: controlState.chargeEnabled && !controlState.emergencyStop,
-          q2Discharge: controlState.dischargeEnabled && !controlState.emergencyStop
-        });
+        if (chartError) {
+          console.error('Error fetching chart data:', chartError);
+        } else if (recentReadings) {
+          const chartPoints = recentReadings.reverse().map(reading => ({
+            time: reading.created_at,
+            voltage: Number(reading.voltage),
+            current: Number(reading.current),
+            power: Number(reading.power)
+          }));
+          setChartData(chartPoints);
+        }
+
+        // Fetch recent alerts
+        const { data: alertsData, error: alertsError } = await supabase
+          .from('alerts')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (alertsError) {
+          console.error('Error fetching alerts:', alertsError);
+        } else if (alertsData) {
+          const formattedAlerts = alertsData.map(alert => ({
+            id: alert.id,
+            severity: alert.severity as 'info' | 'warning' | 'critical',
+            message: alert.message,
+            timestamp: alert.created_at,
+            acknowledged: alert.acknowledged
+          }));
+          setAlerts(formattedAlerts);
+        }
+      } catch (error) {
+        console.error('Error in fetchInitialData:', error);
       }
-    }, 2000); // Update every 2 seconds
+    };
 
-    return () => clearInterval(interval);
-  }, [controlState, batteryData]);
+    fetchInitialData();
+  }, [toast]);
 
-  // Generate alerts based on battery data
+  // Set up realtime subscriptions
   useEffect(() => {
-    const now = new Date().toISOString();
-    
-    if (batteryData.soc <= 10 && !alerts.some(a => a.message.includes('Critical battery'))) {
-      setAlerts(prev => [...prev, {
-        id: Date.now().toString(),
-        severity: 'critical',
-        message: 'Critical battery level: Immediate charging required',
-        timestamp: now,
-        acknowledged: false
-      }]);
-    }
-    
-    if (batteryData.voltage >= 4.1 && !alerts.some(a => a.message.includes('Over-voltage'))) {
-      setAlerts(prev => [...prev, {
-        id: Date.now().toString(),
-        severity: 'warning',
-        message: 'Over-voltage detected: Check charging system',
-        timestamp: now,
-        acknowledged: false
-      }]);
-    }
-  }, [batteryData, alerts]);
+    // Subscribe to battery_logs table
+    const batteryChannel = supabase
+      .channel('battery_logs_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'battery_logs'
+        },
+        (payload) => {
+          const newReading = payload.new;
+          setBatteryData({
+            voltage: Number(newReading.voltage),
+            current: Number(newReading.current),
+            power: Number(newReading.power),
+            soc: Number(newReading.soc),
+            state: (newReading.state || 'IDLE') as BatteryData['state']
+          });
+
+          // Add to chart data
+          const newPoint = {
+            time: newReading.created_at,
+            voltage: Number(newReading.voltage),
+            current: Number(newReading.current),
+            power: Number(newReading.power)
+          };
+          
+          setChartData(prev => {
+            const newData = [...prev, newPoint].slice(-50);
+            return newData;
+          });
+
+          setHistoricalData(prev => {
+            const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+            const filtered = prev.filter(point => point.time > thirtyDaysAgo);
+            return [...filtered, newPoint];
+          });
+        }
+      )
+      .subscribe();
+
+    // Subscribe to alerts table
+    const alertsChannel = supabase
+      .channel('alerts_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'alerts'
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newAlert = payload.new;
+            setAlerts(prev => [{
+              id: newAlert.id,
+              severity: newAlert.severity as 'info' | 'warning' | 'critical',
+              message: newAlert.message,
+              timestamp: newAlert.created_at,
+              acknowledged: newAlert.acknowledged
+            }, ...prev]);
+            
+            toast({
+              title: `${newAlert.severity.toUpperCase()} Alert`,
+              description: newAlert.message,
+              variant: newAlert.severity === 'critical' ? 'destructive' : 'default'
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedAlert = payload.new;
+            setAlerts(prev => prev.map(alert => 
+              alert.id === updatedAlert.id 
+                ? {
+                    id: updatedAlert.id,
+                    severity: updatedAlert.severity as 'info' | 'warning' | 'critical',
+                    message: updatedAlert.message,
+                    timestamp: updatedAlert.created_at,
+                    acknowledged: updatedAlert.acknowledged
+                  }
+                : alert
+            ));
+          } else if (payload.eventType === 'DELETE') {
+            setAlerts(prev => prev.filter(alert => alert.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(batteryChannel);
+      supabase.removeChannel(alertsChannel);
+    };
+  }, [toast]);
 
   const handleControlChange = useCallback((control: keyof ControlState, value: boolean) => {
     setControlState(prev => ({
@@ -307,15 +367,49 @@ export const useBatteryData = () => {
     }));
   }, []);
 
-  const handleAcknowledgeAlert = useCallback((alertId: string) => {
-    setAlerts(prev => prev.map(alert => 
-      alert.id === alertId ? { ...alert, acknowledged: true } : alert
-    ));
-  }, []);
+  const handleAcknowledgeAlert = useCallback(async (alertId: string) => {
+    try {
+      const { error } = await supabase
+        .from('alerts')
+        .update({ 
+          acknowledged: true,
+          acknowledged_at: new Date().toISOString(),
+          acknowledged_by: (await supabase.auth.getUser()).data.user?.id
+        })
+        .eq('id', alertId);
 
-  const handleDismissAlert = useCallback((alertId: string) => {
-    setAlerts(prev => prev.filter(alert => alert.id !== alertId));
-  }, []);
+      if (error) {
+        console.error('Error acknowledging alert:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to acknowledge alert',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Error in handleAcknowledgeAlert:', error);
+    }
+  }, [toast]);
+
+  const handleDismissAlert = useCallback(async (alertId: string) => {
+    try {
+      const { error } = await supabase
+        .from('alerts')
+        .delete()
+        .eq('id', alertId);
+
+      if (error) {
+        console.error('Error dismissing alert:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to dismiss alert',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Error in handleDismissAlert:', error);
+    }
+  }, [toast]);
 
   const handleRunMosfetTest = useCallback(() => {
     setDiagnostics(prev => ({
