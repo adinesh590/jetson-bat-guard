@@ -46,6 +46,7 @@ export const Dashboard = ({ userRole = "viewer" }: DashboardProps) => {
     systemStatus,
     diagnostics,
     handleControlChange,
+    handleMosfetToggle,
     handleEmergencyStop,
     handleResetProtection,
     handleAcknowledgeAlert,
@@ -199,15 +200,27 @@ export const Dashboard = ({ userRole = "viewer" }: DashboardProps) => {
                 <CardContent>
                   <div className="space-y-1">
                     <div className="flex justify-between text-sm">
-                      <span>Q1 (Charge):</span>
-                      <Badge variant={mosfetStatus.q1Charge ? "default" : "secondary"}>
-                        {mosfetStatus.q1Charge ? "ON" : "OFF"}
+                      <span>Qc (Charge):</span>
+                      <Badge variant={mosfetStatus.qc ? "default" : "secondary"}>
+                        {mosfetStatus.qc ? "ON" : "OFF"}
                       </Badge>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Q2 (Discharge):</span>
-                      <Badge variant={mosfetStatus.q2Discharge ? "default" : "secondary"}>
-                        {mosfetStatus.q2Discharge ? "ON" : "OFF"}
+                      <span>Qd1 (Discharge):</span>
+                      <Badge variant={mosfetStatus.qd1 ? "default" : "secondary"}>
+                        {mosfetStatus.qd1 ? "ON" : "OFF"}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Qd2 (Discharge):</span>
+                      <Badge variant={mosfetStatus.qd2 ? "default" : "secondary"}>
+                        {mosfetStatus.qd2 ? "ON" : "OFF"}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Qd3 (Discharge):</span>
+                      <Badge variant={mosfetStatus.qd3 ? "default" : "secondary"}>
+                        {mosfetStatus.qd3 ? "ON" : "OFF"}
                       </Badge>
                     </div>
                   </div>
@@ -251,6 +264,7 @@ export const Dashboard = ({ userRole = "viewer" }: DashboardProps) => {
               controlState={controlState}
               mosfetStatus={mosfetStatus}
               onControlChange={handleControlChange}
+              onMosfetToggle={handleMosfetToggle}
               onEmergencyStop={handleEmergencyStop}
               onResetProtection={handleResetProtection}
             />

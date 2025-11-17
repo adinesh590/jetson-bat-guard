@@ -21,8 +21,10 @@ import { cn } from "@/lib/utils";
 
 interface DiagnosticsState {
   mosfetTest: {
-    q1Status: 'idle' | 'testing' | 'passed' | 'failed';
-    q2Status: 'idle' | 'testing' | 'passed' | 'failed';
+    qcStatus: 'idle' | 'testing' | 'passed' | 'failed';
+    qd1Status: 'idle' | 'testing' | 'passed' | 'failed';
+    qd2Status: 'idle' | 'testing' | 'passed' | 'failed';
+    qd3Status: 'idle' | 'testing' | 'passed' | 'failed';
     lastTest: string;
   };
   sensorValidation: {
@@ -121,9 +123,9 @@ export const DiagnosticsPanel = ({
                 size="sm"
                 variant="outline"
                 onClick={onRunMosfetTest}
-                disabled={diagnostics.mosfetTest.q1Status === 'testing'}
+                disabled={diagnostics.mosfetTest.qcStatus === 'testing'}
               >
-                {diagnostics.mosfetTest.q1Status === 'testing' ? (
+                {diagnostics.mosfetTest.qcStatus === 'testing' ? (
                   <>
                     <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                     Testing...
@@ -139,20 +141,38 @@ export const DiagnosticsPanel = ({
 
             <div className="grid grid-cols-2 gap-2 pl-6">
               <div className="flex items-center justify-between">
-                <span className="text-xs">Q1 (Charge)</span>
+                <span className="text-xs">Qc (Charge)</span>
                 <div className="flex items-center gap-1">
-                  {getStatusIcon(diagnostics.mosfetTest.q1Status)}
-                  <Badge variant={getStatusBadgeVariant(diagnostics.mosfetTest.q1Status)} className="text-xs">
-                    {diagnostics.mosfetTest.q1Status}
+                  {getStatusIcon(diagnostics.mosfetTest.qcStatus)}
+                  <Badge variant={getStatusBadgeVariant(diagnostics.mosfetTest.qcStatus)} className="text-xs">
+                    {diagnostics.mosfetTest.qcStatus}
                   </Badge>
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs">Q2 (Discharge)</span>
+                <span className="text-xs">Qd1 (Discharge)</span>
                 <div className="flex items-center gap-1">
-                  {getStatusIcon(diagnostics.mosfetTest.q2Status)}
-                  <Badge variant={getStatusBadgeVariant(diagnostics.mosfetTest.q2Status)} className="text-xs">
-                    {diagnostics.mosfetTest.q2Status}
+                  {getStatusIcon(diagnostics.mosfetTest.qd1Status)}
+                  <Badge variant={getStatusBadgeVariant(diagnostics.mosfetTest.qd1Status)} className="text-xs">
+                    {diagnostics.mosfetTest.qd1Status}
+                  </Badge>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs">Qd2 (Discharge)</span>
+                <div className="flex items-center gap-1">
+                  {getStatusIcon(diagnostics.mosfetTest.qd2Status)}
+                  <Badge variant={getStatusBadgeVariant(diagnostics.mosfetTest.qd2Status)} className="text-xs">
+                    {diagnostics.mosfetTest.qd2Status}
+                  </Badge>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs">Qd3 (Discharge)</span>
+                <div className="flex items-center gap-1">
+                  {getStatusIcon(diagnostics.mosfetTest.qd3Status)}
+                  <Badge variant={getStatusBadgeVariant(diagnostics.mosfetTest.qd3Status)} className="text-xs">
+                    {diagnostics.mosfetTest.qd3Status}
                   </Badge>
                 </div>
               </div>
