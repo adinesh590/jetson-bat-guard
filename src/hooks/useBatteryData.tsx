@@ -26,8 +26,10 @@ interface ControlState {
 }
 
 interface MOSFETStatus {
-  q1Charge: boolean;
-  q2Discharge: boolean;
+  qc: boolean;  // Charging MOSFET
+  qd1: boolean; // Discharge MOSFET 1
+  qd2: boolean; // Discharge MOSFET 2
+  qd3: boolean; // Discharge MOSFET 3
 }
 
 interface Alert {
@@ -66,8 +68,10 @@ interface SystemStatus {
 
 interface DiagnosticsState {
   mosfetTest: {
-    q1Status: 'idle' | 'testing' | 'passed' | 'failed';
-    q2Status: 'idle' | 'testing' | 'passed' | 'failed';
+    qcStatus: 'idle' | 'testing' | 'passed' | 'failed';
+    qd1Status: 'idle' | 'testing' | 'passed' | 'failed';
+    qd2Status: 'idle' | 'testing' | 'passed' | 'failed';
+    qd3Status: 'idle' | 'testing' | 'passed' | 'failed';
     lastTest: string;
   };
   sensorValidation: {
@@ -110,8 +114,10 @@ export const useBatteryData = () => {
   });
 
   const [mosfetStatus, setMosfetStatus] = useState<MOSFETStatus>({
-    q1Charge: true,
-    q2Discharge: false
+    qc: false,
+    qd1: false,
+    qd2: false,
+    qd3: false
   });
 
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -144,8 +150,10 @@ export const useBatteryData = () => {
 
   const [diagnostics, setDiagnostics] = useState<DiagnosticsState>({
     mosfetTest: {
-      q1Status: 'idle',
-      q2Status: 'idle',
+      qcStatus: 'idle',
+      qd1Status: 'idle',
+      qd2Status: 'idle',
+      qd3Status: 'idle',
       lastTest: 'Never'
     },
     sensorValidation: {
@@ -344,6 +352,35 @@ export const useBatteryData = () => {
     };
   }, [toast]);
 
+  const handleMosfetToggle = useCallback((mosfet: keyof MOSFETStatus, value: boolean) => {
+    setMosfetStatus(prev => {
+      // If turning ON a discharge MOSFET, turn OFF charging MOSFET
+      if ((mosfet === 'qd1' || mosfet === 'qd2' || mosfet === 'qd3') && value) {
+        return {
+          ...prev,
+          qc: false,
+          [mosfet]: true
+        };
+      }
+      
+      // If turning ON charging MOSFET, turn OFF all discharge MOSFETs
+      if (mosfet === 'qc' && value) {
+        return {
+          qc: true,
+          qd1: false,
+          qd2: false,
+          qd3: false
+        };
+      }
+      
+      // If turning OFF, just update that specific MOSFET
+      return {
+        ...prev,
+        [mosfet]: value
+      };
+    });
+  }, []);
+
   const handleControlChange = useCallback((control: keyof ControlState, value: boolean) => {
     setControlState(prev => ({
       ...prev,
@@ -415,8 +452,10 @@ export const useBatteryData = () => {
     setDiagnostics(prev => ({
       ...prev,
       mosfetTest: {
-        q1Status: 'testing',
-        q2Status: 'testing',
+        qcStatus: 'testing',
+        qd1Status: 'testing',
+        qd2Status: 'testing',
+        qd3Status: 'testing',
         lastTest: new Date().toLocaleString()
       }
     }));
@@ -425,8 +464,10 @@ export const useBatteryData = () => {
       setDiagnostics(prev => ({
         ...prev,
         mosfetTest: {
-          q1Status: 'passed',
-          q2Status: 'passed',
+          qcStatus: 'passed',
+          qd1Status: 'passed',
+          qd2Status: 'passed',
+          qd3Status: 'passed',
           lastTest: new Date().toLocaleString()
         },
         systemLogs: [
@@ -541,6 +582,7 @@ export const useBatteryData = () => {
     systemStatus,
     diagnostics,
     handleControlChange,
+    handleMosfetToggle,
     handleEmergencyStop,
     handleResetProtection,
     handleAcknowledgeAlert,
