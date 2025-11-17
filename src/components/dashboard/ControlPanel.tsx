@@ -48,59 +48,7 @@ export const ControlPanel = ({
   onResetProtection 
 }: ControlPanelProps) => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Manual Controls */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Manual Controls
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="charge-enable" className="flex items-center gap-2">
-              <Play className="h-4 w-4 text-state-charging" />
-              Charge Enable
-            </Label>
-            <Switch
-              id="charge-enable"
-              checked={controlState.chargeEnabled}
-              onCheckedChange={(checked) => onControlChange('chargeEnabled', checked)}
-              disabled={controlState.emergencyStop}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <Label htmlFor="discharge-enable" className="flex items-center gap-2">
-              <Pause className="h-4 w-4 text-state-discharging" />
-              Discharge Enable
-            </Label>
-            <Switch
-              id="discharge-enable"
-              checked={controlState.dischargeEnabled}
-              onCheckedChange={(checked) => onControlChange('dischargeEnabled', checked)}
-              disabled={controlState.emergencyStop}
-            />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="auto-mode" className="flex items-center gap-2">
-              <Power className="h-4 w-4" />
-              Auto Mode
-            </Label>
-            <Switch
-              id="auto-mode"
-              checked={controlState.autoMode}
-              onCheckedChange={(checked) => onControlChange('autoMode', checked)}
-              disabled={controlState.emergencyStop}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Safety Controls */}
       <Card>
         <CardHeader>
