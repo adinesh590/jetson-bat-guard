@@ -83,6 +83,42 @@ export type Database = {
         }
         Relationships: []
       }
+      control_commands: {
+        Row: {
+          command_type: string
+          created_at: string
+          created_by: string | null
+          data: Json | null
+          executed_at: string | null
+          id: string
+          mosfet_name: string | null
+          mosfet_state: boolean | null
+          status: string
+        }
+        Insert: {
+          command_type: string
+          created_at?: string
+          created_by?: string | null
+          data?: Json | null
+          executed_at?: string | null
+          id?: string
+          mosfet_name?: string | null
+          mosfet_state?: boolean | null
+          status?: string
+        }
+        Update: {
+          command_type?: string
+          created_at?: string
+          created_by?: string | null
+          data?: Json | null
+          executed_at?: string | null
+          id?: string
+          mosfet_name?: string | null
+          mosfet_state?: boolean | null
+          status?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
