@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface BatteryData {
@@ -94,11 +93,16 @@ interface DiagnosticsState {
 
 export const useBatteryData = () => {
   const { toast } = useToast();
+  
+  // Simulation state
+  const [simulationVoltage, setSimulationVoltage] = useState(3.7);
+  const [simulationSoc, setSimulationSoc] = useState(65);
+  
   const [batteryData, setBatteryData] = useState<BatteryData>({
-    voltage: 0,
+    voltage: 3.7,
     current: 0,
     power: 0,
-    soc: 0,
+    soc: 65,
     state: 'IDLE'
   });
 
