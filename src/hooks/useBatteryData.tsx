@@ -95,14 +95,14 @@ export const useBatteryData = () => {
   const { toast } = useToast();
   
   // Simulation state
-  const [simulationVoltage, setSimulationVoltage] = useState(1.90);
-  const [simulationSoc, setSimulationSoc] = useState(5);
+  const [simulationVoltage, setSimulationVoltage] = useState(2.8);
+  const [simulationSoc, setSimulationSoc] = useState(15);
   
   const [batteryData, setBatteryData] = useState<BatteryData>({
-    voltage: 1.90,
+    voltage: 2.8,
     current: 0,
     power: 0,
-    soc: 5,
+    soc: 15,
     state: 'IDLE'
   });
 
