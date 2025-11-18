@@ -232,8 +232,8 @@ export const useBatteryData = () => {
 
           // Charging mode (QC MOSFET active)
           if (mosfetStatus.qc && controlState.chargeEnabled && !controlState.emergencyStop) {
-            // Charging current: 0.01A to 0.03A
-            current = 0.01 + Math.random() * 0.02;
+            // Charging current: 0.01A to 0.04A
+            current = 0.01 + Math.random() * 0.03;
             
             // Increase voltage (slower as we approach 4.2V)
             const chargeRate = (4.2 - prevVoltage) / 1.5 * 0.002;
