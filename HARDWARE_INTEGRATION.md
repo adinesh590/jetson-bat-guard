@@ -20,8 +20,7 @@ Send a POST request with JSON payload:
   "voltage": 12.5,
   "current": 2.3,
   "power": 28.75,
-  "soc": 85,
-  "temperature": 35
+  "soc": 85
 }
 ```
 
@@ -32,7 +31,6 @@ Send a POST request with JSON payload:
 
 ### Optional Fields
 - `power` (number): Power in watts (calculated from voltage * current if not provided)
-- `temperature` (number): Temperature in Celsius
 
 ## Python Example
 
@@ -53,7 +51,6 @@ def read_battery_data():
         "voltage": 12.5,
         "current": 2.3,
         "soc": 85,
-        "temperature": 35,
     }
 
 def send_battery_data(data):
@@ -116,15 +113,13 @@ curl -X POST https://wbkqyibvhjstnyzxjlkf.supabase.co/functions/v1/ingest-batter
   -d '{
     "voltage": 12.5,
     "current": 2.3,
-    "soc": 85,
-    "temperature": 35
+    "soc": 85
   }'
 ```
 
 ## Automatic Alerts
 The system automatically creates alerts when:
 - SOC drops below 20% (warning) or 10% (critical)
-- Temperature exceeds 45°C (warning) or 50°C (critical)
 - Voltage drops below 10V (warning)
 
 ## Webhook Integration
