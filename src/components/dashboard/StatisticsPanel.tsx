@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Zap, Activity, Gauge, Battery } from "lucide-react";
+import { TrendingUp, TrendingDown, Zap, Activity, Gauge, Battery, AlertTriangle } from "lucide-react";
 
 interface Statistics {
   voltage: {
@@ -18,8 +18,13 @@ interface Statistics {
     min: number;
   };
   energy: {
-    consumed: number; // Wh
-    stored: number; // Wh
+    consumed: number;
+    stored: number;
+  };
+  errors: {
+    voltage: { mse: number; rmse: number };
+    current: { mse: number; rmse: number };
+    power: { mse: number; rmse: number };
   };
 }
 
@@ -145,6 +150,63 @@ export const StatisticsPanel = ({ statistics }: StatisticsPanelProps) => {
               }`}>
                 {(statistics.energy.stored - statistics.energy.consumed).toFixed(2)} Wh
               </span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Error Metrics Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Voltage Error */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Voltage Error</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-chart-voltage" />
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">MSE:</span>
+              <span className="font-semibold">{statistics.errors.voltage.mse.toFixed(6)} V²</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">RMSE:</span>
+              <span className="font-semibold">{statistics.errors.voltage.rmse.toFixed(4)} V</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Current Error */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Current Error</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-chart-current" />
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">MSE:</span>
+              <span className="font-semibold">{statistics.errors.current.mse.toFixed(6)} A²</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">RMSE:</span>
+              <span className="font-semibold">{statistics.errors.current.rmse.toFixed(4)} A</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Power Error */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Power Error</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-chart-power" />
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">MSE:</span>
+              <span className="font-semibold">{statistics.errors.power.mse.toFixed(6)} W²</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">RMSE:</span>
+              <span className="font-semibold">{statistics.errors.power.rmse.toFixed(4)} W</span>
             </div>
           </CardContent>
         </Card>
