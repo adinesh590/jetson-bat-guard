@@ -14,6 +14,11 @@ interface Statistics {
   current: { avg: number; peak: number; min: number };
   power: { avg: number; peak: number; min: number };
   energy: { consumed: number; stored: number };
+  errors: { 
+    voltage: { mse: number; rmse: number };
+    current: { mse: number; rmse: number };
+    power: { mse: number; rmse: number };
+  };
 }
 
 export const useHistoricalData = (
@@ -65,7 +70,12 @@ export const useHistoricalData = (
         voltage: { avg: 0, peak: 0, min: 0 },
         current: { avg: 0, peak: 0, min: 0 },
         power: { avg: 0, peak: 0, min: 0 },
-        energy: { consumed: 0, stored: 0 }
+        energy: { consumed: 0, stored: 0 },
+        errors: {
+          voltage: { mse: 0, rmse: 0 },
+          current: { mse: 0, rmse: 0 },
+          power: { mse: 0, rmse: 0 }
+        }
       };
     }
 
@@ -103,11 +113,26 @@ export const useHistoricalData = (
       }
     }
 
+    // Calculate MSE and RMSE (error from average/expected value)
+    const voltageMSE = voltages.reduce((sum, v) => sum + Math.pow(v - avgVoltage, 2), 0) / voltages.length;
+    const voltageRMSE = Math.sqrt(voltageMSE);
+
+    const currentMSE = currents.reduce((sum, c) => sum + Math.pow(c - avgCurrent, 2), 0) / currents.length;
+    const currentRMSE = Math.sqrt(currentMSE);
+
+    const powerMSE = powers.reduce((sum, p) => sum + Math.pow(p - avgPower, 2), 0) / powers.length;
+    const powerRMSE = Math.sqrt(powerMSE);
+
     return {
       voltage: { avg: avgVoltage, peak: peakVoltage, min: minVoltage },
       current: { avg: avgCurrent, peak: peakCurrent, min: minCurrent },
       power: { avg: avgPower, peak: peakPower, min: minPower },
-      energy: { consumed: energyConsumed, stored: energyStored }
+      energy: { consumed: energyConsumed, stored: energyStored },
+      errors: {
+        voltage: { mse: voltageMSE, rmse: voltageRMSE },
+        current: { mse: currentMSE, rmse: currentRMSE },
+        power: { mse: powerMSE, rmse: powerRMSE }
+      }
     };
   }, [filteredData]);
 
