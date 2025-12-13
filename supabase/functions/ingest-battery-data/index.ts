@@ -11,7 +11,6 @@ interface BatteryDataPayload {
   current: number;
   power?: number;
   soc: number;
-  temperature?: number;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -59,7 +58,6 @@ const handler = async (req: Request): Promise<Response> => {
         current: data.current,
         power: data.power || data.voltage * data.current,
         soc: data.soc,
-        temperature: data.temperature || null,
         state: state,
       });
 
@@ -76,14 +74,6 @@ const handler = async (req: Request): Promise<Response> => {
         title: "Battery Critical",
         severity: data.soc < 10 ? "critical" : "warning",
         message: `Battery level ${data.soc < 10 ? 'critically' : ''} low: ${data.soc}%`,
-      });
-    }
-
-    if (data.temperature && data.temperature > 45) {
-      alerts.push({
-        title: "High Temperature",
-        severity: data.temperature > 50 ? "critical" : "warning",
-        message: `High temperature detected: ${data.temperature}°C`,
       });
     }
 
