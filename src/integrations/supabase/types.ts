@@ -52,9 +52,12 @@ export type Database = {
           created_at: string
           created_by: string | null
           current: number
+          cycle_count: number | null
           id: string
+          mosfet_states: string | null
           power: number
           soc: number
+          soh: number | null
           state: string
           temperature: number | null
           voltage: number
@@ -63,9 +66,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           current: number
+          cycle_count?: number | null
           id?: string
+          mosfet_states?: string | null
           power: number
           soc: number
+          soh?: number | null
           state: string
           temperature?: number | null
           voltage: number
@@ -74,9 +80,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           current?: number
+          cycle_count?: number | null
           id?: string
+          mosfet_states?: string | null
           power?: number
           soc?: number
+          soh?: number | null
           state?: string
           temperature?: number | null
           voltage?: number
