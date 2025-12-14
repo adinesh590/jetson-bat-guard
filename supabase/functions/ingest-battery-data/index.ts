@@ -11,6 +11,9 @@ interface BatteryDataPayload {
   current: number;
   power?: number;
   soc: number;
+  soh?: number;
+  mosfet_states?: string;
+  cycle_count?: number;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -58,6 +61,9 @@ const handler = async (req: Request): Promise<Response> => {
         current: data.current,
         power: data.power || data.voltage * data.current,
         soc: data.soc,
+        soh: data.soh || null,
+        mosfet_states: data.mosfet_states || null,
+        cycle_count: data.cycle_count || null,
         state: state,
       });
 
