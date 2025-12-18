@@ -172,7 +172,7 @@ export const Dashboard = ({ userRole = "viewer" }: DashboardProps) => {
             </Card>
 
             {/* Statistics */}
-            <StatisticsPanel statistics={statistics} />
+            <StatisticsPanel statistics={statistics} soc={batteryData.soc} soh={batteryData.soh} />
             
             {/* Real-time Charts */}
             <RealtimeCharts data={filteredData.length > 0 ? filteredData : chartData} />
