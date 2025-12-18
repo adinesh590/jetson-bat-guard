@@ -6,6 +6,7 @@ interface BatteryData {
   current: number;
   power: number;
   soc: number;
+  soh: number;
   state: 'CHARGING' | 'DISCHARGING' | 'IDLE' | 'PROTECTION';
 }
 
@@ -103,6 +104,7 @@ export const useBatteryData = () => {
     current: 0,
     power: 0,
     soc: 15,
+    soh: 92,
     state: 'IDLE'
   });
 
@@ -275,13 +277,14 @@ export const useBatteryData = () => {
           const power = newVoltage * current;
 
           // Update battery data
-          setBatteryData({
+          setBatteryData(prev => ({
             voltage: parseFloat(newVoltage.toFixed(3)),
             current: parseFloat(current.toFixed(3)),
             power: parseFloat(power.toFixed(3)),
             soc: parseFloat(newSoc.toFixed(1)),
+            soh: prev.soh,
             state: controlState.protectionMode ? 'PROTECTION' : state
-          });
+          }));
 
           // Add to chart data
           const newPoint: ChartDataPoint = {
