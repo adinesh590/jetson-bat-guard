@@ -241,7 +241,7 @@ export const useBatteryData = () => {
           const continueDischarge = noManualMosfet && prevSoc > 20 && batteryData.state === 'DISCHARGING';
 
           // Charging mode (QC MOSFET active OR auto-charging)
-          if ((mosfetStatus.qc || autoCharging) && controlState.chargeEnabled && !controlState.emergencyStop) {
+          if ((mosfetStatus.qc || autoCharging || continueCharge) && controlState.chargeEnabled && !controlState.emergencyStop) {
             current = 0.01 + Math.random() * 0.02;
             const chargeRate = (4.2 - prevVoltage) / 1.5 * 0.002;
             newVoltage = Math.min(4.2, prevVoltage + chargeRate + (Math.random() * 0.001 - 0.0005));
