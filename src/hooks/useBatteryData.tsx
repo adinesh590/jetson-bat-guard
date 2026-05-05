@@ -232,8 +232,11 @@ export const useBatteryData = () => {
             });
           }
 
-          // Charging mode (QC MOSFET active)
-          if (mosfetStatus.qc && controlState.chargeEnabled && !controlState.emergencyStop) {
+          // Auto-cycle: charge when low, discharge when high
+          const autoCharging = prevSoc < 95 && prevVoltage < 4.15;
+
+          // Charging mode (QC MOSFET active OR auto-cycle charging)
+          if ((mosfetStatus.qc || autoCharging) && controlState.chargeEnabled && !controlState.emergencyStop) {
             // Charging current: 0.01A to 0.03A
             current = 0.01 + Math.random() * 0.02;
             
