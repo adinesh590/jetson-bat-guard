@@ -90,7 +90,7 @@ export const BatteryMetrics = ({ data }: BatteryMetricsProps) => {
             </Badge>
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            Peak: ±5.0A
+            Peak: ±1.5A
           </div>
         </CardContent>
       </Card>
