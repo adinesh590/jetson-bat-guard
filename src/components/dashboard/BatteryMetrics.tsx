@@ -114,7 +114,7 @@ export const BatteryMetrics = ({ data }: BatteryMetricsProps) => {
             </div>
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            Max: 20W
+            Max: 6.5W
           </div>
         </CardContent>
       </Card>
