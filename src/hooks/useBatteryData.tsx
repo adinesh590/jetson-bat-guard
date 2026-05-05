@@ -232,24 +232,16 @@ export const useBatteryData = () => {
             });
           }
 
-          // Auto-cycle when no MOSFETs are manually toggled: charge to ~95%, discharge to ~20%
-          const noManualMosfet = !mosfetStatus.qc && !mosfetStatus.qd1 && !mosfetStatus.qd2 && !mosfetStatus.qd3;
-          const autoCharging = noManualMosfet && prevSoc < 95 && prevVoltage < 4.15 && prevSoc <= 20;
-          const autoDischarging = noManualMosfet && !autoCharging && prevSoc >= 95;
-          // Continue current auto direction via voltage hysteresis
-          const continueCharge = noManualMosfet && prevVoltage < 4.15 && prevSoc < 95 && batteryData.state === 'CHARGING';
-          const continueDischarge = noManualMosfet && prevSoc > 20 && batteryData.state === 'DISCHARGING';
-
-          // Charging mode (QC MOSFET active OR auto-charging)
-          if ((mosfetStatus.qc || autoCharging || continueCharge) && controlState.chargeEnabled && !controlState.emergencyStop) {
+          // Charging mode (QC MOSFET active)
+          if (mosfetStatus.qc && controlState.chargeEnabled && !controlState.emergencyStop) {
             current = 0.01 + Math.random() * 0.02;
             const chargeRate = (4.2 - prevVoltage) / 1.5 * 0.002;
             newVoltage = Math.min(4.2, prevVoltage + chargeRate + (Math.random() * 0.001 - 0.0005));
             newSoc = Math.min(100, prevSoc + 0.2);
             state = 'CHARGING';
           }
-          // Discharging mode (any QD MOSFET active OR auto-discharging)
-          else if (((mosfetStatus.qd1 || mosfetStatus.qd2 || mosfetStatus.qd3) || autoDischarging || continueDischarge) && 
+          // Discharging mode (any QD MOSFET active)
+          else if ((mosfetStatus.qd1 || mosfetStatus.qd2 || mosfetStatus.qd3) &&
                    controlState.dischargeEnabled && !controlState.emergencyStop) {
             let dischargeFactor = 1;
             if (mosfetStatus.qd2) dischargeFactor = 1.5;
