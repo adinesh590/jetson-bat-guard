@@ -249,7 +249,7 @@ export const useBatteryData = () => {
             state = 'CHARGING';
           }
           // Discharging mode (any QD MOSFET active OR auto-discharging)
-          else if (((mosfetStatus.qd1 || mosfetStatus.qd2 || mosfetStatus.qd3) || autoDischarging) && 
+          else if (((mosfetStatus.qd1 || mosfetStatus.qd2 || mosfetStatus.qd3) || autoDischarging || continueDischarge) && 
                    controlState.dischargeEnabled && !controlState.emergencyStop) {
             let dischargeFactor = 1;
             if (mosfetStatus.qd2) dischargeFactor = 1.5;
