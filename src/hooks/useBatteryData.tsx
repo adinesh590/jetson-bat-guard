@@ -232,44 +232,36 @@ export const useBatteryData = () => {
             });
           }
 
-          // Auto-cycle: charge when low, discharge when high
-          const autoCharging = prevSoc < 95 && prevVoltage < 4.15;
+          // Auto-cycle: charge until ~95%, then discharge until ~20%, repeat
+          const autoCharging = !mosfetStatus.qc && !mosfetStatus.qd1 && !mosfetStatus.qd2 && !mosfetStatus.qd3
+            && prevSoc < 95 && prevVoltage < 4.15
+            && (prevSoc < 25 || (prevSoc < 95 && state !== 'DISCHARGING'));
+          const autoDischarging = !mosfetStatus.qc && !mosfetStatus.qd1 && !mosfetStatus.qd2 && !mosfetStatus.qd3
+            && !autoCharging && prevSoc > 20;
 
-          // Charging mode (QC MOSFET active OR auto-cycle charging)
+          // Charging mode (QC MOSFET active OR auto-charging)
           if ((mosfetStatus.qc || autoCharging) && controlState.chargeEnabled && !controlState.emergencyStop) {
-            // Charging current: 0.01A to 0.03A
             current = 0.01 + Math.random() * 0.02;
-            
-            // Increase voltage (slower as we approach 4.2V)
             const chargeRate = (4.2 - prevVoltage) / 1.5 * 0.002;
             newVoltage = Math.min(4.2, prevVoltage + chargeRate + (Math.random() * 0.001 - 0.0005));
-            
-            // Increase SOC
             newSoc = Math.min(100, prevSoc + 0.2);
             state = 'CHARGING';
           }
-          // Discharging mode (any QD MOSFET active)
-          else if ((mosfetStatus.qd1 || mosfetStatus.qd2 || mosfetStatus.qd3) && 
+          // Discharging mode (any QD MOSFET active OR auto-discharging)
+          else if (((mosfetStatus.qd1 || mosfetStatus.qd2 || mosfetStatus.qd3) || autoDischarging) && 
                    controlState.dischargeEnabled && !controlState.emergencyStop) {
-            // Discharging current: 0.1A to 0.9A
             let dischargeFactor = 1;
-            if (mosfetStatus.qd1) dischargeFactor = 1;
             if (mosfetStatus.qd2) dischargeFactor = 1.5;
             if (mosfetStatus.qd3) dischargeFactor = 2;
             
             current = -(0.1 + Math.random() * 0.8) * dischargeFactor;
-            
-            // Decrease voltage
             const dischargeRate = Math.abs(current) * 0.0008;
             newVoltage = Math.max(2.7, prevVoltage - dischargeRate + (Math.random() * 0.0002 - 0.0001));
-            
-            // Decrease SOC
             newSoc = Math.max(0, prevSoc - 0.15 * dischargeFactor);
             state = 'DISCHARGING';
           }
           // Idle mode
           else {
-            // Small voltage fluctuation
             newVoltage = prevVoltage + (Math.random() * 0.002 - 0.001);
             newVoltage = Math.max(2.7, Math.min(4.2, newVoltage));
             current = 0;
